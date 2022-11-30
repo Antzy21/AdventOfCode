@@ -2,5 +2,8 @@
 # This .gitignore file was automatically created by Microsoft(R) Visual Studio.
 ################################################################################
 
-/.vs
+AdventOfCode2021/.vs
+AdventOfCode2021/bin
+AdventOfCode2021/obj
+
 /AdventOfCode2022/node_modules
