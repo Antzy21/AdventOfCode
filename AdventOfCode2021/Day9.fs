@@ -22,7 +22,7 @@ let input =
 
 let findLowValues (plane: int [,]) : int list =
     plane
-    |> Array2D.foldi (fun i j (s: int list) cell ->
+    |> Array2D.foldij (fun i j (s: int list) cell ->
         match Array2D.adjacentComparisonCheck plane ( > ) i j with
         | true -> cell :: s
         | false -> s
@@ -34,7 +34,7 @@ let riskLevel (lowPoints: int list) =
 
 let findLowPoints (plane: int [,]) : position list =
     plane
-    |> Array2D.foldi (fun i j (s: position list) cell ->
+    |> Array2D.foldij (fun i j (s: position list) cell ->
         match Array2D.adjacentComparisonCheck plane ( > ) i j with
         | true -> (i, j) :: s
         | false -> s

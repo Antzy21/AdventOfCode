@@ -27,7 +27,7 @@ let input =
 let private adjacentFlashEffect (energyLevels: int [,]) : int [,] =
     let copy = Array2D.copy energyLevels
     energyLevels
-    |> Array2D.foldi (fun i j (levels: int [,]) level ->
+    |> Array2D.foldij (fun i j (levels: int [,]) level ->
         if level > 9 then
             levels.[i,j] <- -100 // Has flashed, don't flash again
             levels
