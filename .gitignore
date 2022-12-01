@@ -7,3 +7,4 @@ AdventOfCode2021/bin
 AdventOfCode2021/obj
 
 /AdventOfCode2022/node_modules
+AdventOfCode2022/*.js
