@@ -1,7 +1,7 @@
 import * as fs from 'fs';
 
-let input = fs.readFileSync("input1.txt", "utf-8");
-let inputDemo = `1000
+const input = fs.readFileSync("input1.txt", "utf-8");
+const inputDemo = `1000
 2000
 3000
 
@@ -19,18 +19,16 @@ let inputDemo = `1000
 class elf {
     foods: number[] = [];
     totalFood() {
-        let total : number = 0;
-        this.foods.forEach(food => {
-            total += food
-        });
-        return total;
+        return this.foods.reduce((acc, cur) =>{
+            return acc + cur
+        }, 0);
     }
 }
 
-let lines = input.split('\n')
+const lines = input.split('\n')
 
 let currentElf = new elf();
-let elves : elf[] = [];
+const elves : elf[] = [];
 
 lines.forEach(line => {
     if (line == "") {
@@ -44,12 +42,12 @@ lines.forEach(line => {
 });
 elves.push(currentElf);
 
-let elfFoodTotals : number[] = elves.map(e => e.totalFood());
+const elfFoodTotals : number[] = elves.map(e => e.totalFood());
 elfFoodTotals.sort((a,b)=> b-a);
 
-let e1 = elfFoodTotals[0];
-let e2 = elfFoodTotals[1];
-let e3 = elfFoodTotals[2];
+const e1 = elfFoodTotals[0];
+const e2 = elfFoodTotals[1];
+const e3 = elfFoodTotals[2];
 console.log(e1);
 console.log(e2);
 console.log(e3);
