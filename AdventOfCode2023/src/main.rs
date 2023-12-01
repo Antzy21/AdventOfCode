@@ -65,9 +65,9 @@ fn part2(input: &str) -> i32 {
 
     let sum = parts.fold(0,  |sum, part| {
 
-        let x = part.replace("one", "1").replace("two", "2").replace("three", "3")
-        .replace("four", "4").replace("five", "5").replace("six", "6")
-        .replace("seven", "7").replace("eight", "8").replace("nine", "9");
+        let x = part.replace("one", "o1e").replace("two", "t2o").replace("three", "t3e")
+        .replace("four", "f4r").replace("five", "f5e").replace("six", "s6x")
+        .replace("seven", "s7n").replace("eight", "e8t").replace("nine", "n9e");
         
         println!("{}", x);
 
