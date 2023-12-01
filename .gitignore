@@ -8,3 +8,7 @@ AdventOfCode2021/obj
 
 /AdventOfCode2022/node_modules
 AdventOfCode2022/*.js
+AdventOfCode2023/target/debug/*
+AdventOfCode2023/target/.rustc_info.json
+AdventOfCode2023/Cargo.lock
+AdventOfCode2023/target/CACHEDIR.TAG
