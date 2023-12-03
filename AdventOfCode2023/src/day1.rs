@@ -12,8 +12,7 @@ pub fn main(use_examples: bool) {
     a1b2c3d4e5f
     treb7uchet";
 
-    //let answer_p1 = part1(example_input);
-    let answer_p1 = if !use_examples {part1(&example_input)} else {part1(&input)};
+    let answer_p1 = if use_examples {part1(&example_input)} else {part1(&input)};
     println!("{}", answer_p1);
 
     let example_input2 = "two1nine
