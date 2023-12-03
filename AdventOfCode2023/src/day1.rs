@@ -1,7 +1,10 @@
-use core::num;
 use std::{fs, collections::HashMap};
 
-pub fn main() {
+pub fn main(use_examples: bool) {
+
+    let input_path = "inputs/day1/input.txt";
+    let input = fs::read_to_string(input_path)
+        .expect("Should have been able to read the file");
 
     let example_input = 
     "1abc2
@@ -9,13 +12,9 @@ pub fn main() {
     a1b2c3d4e5f
     treb7uchet";
 
-    let input_path = "inputs/day1/input.txt";
-        
-    let input = fs::read_to_string(input_path)
-        .expect("Should have been able to read the file");
-
-    part1(example_input);
-    part1(&input);
+    //let answer_p1 = part1(example_input);
+    let answer_p1 = if !use_examples {part1(&example_input)} else {part1(&input)};
+    println!("{}", answer_p1);
 
     let example_input2 = "two1nine
     eightwothree
@@ -25,9 +24,8 @@ pub fn main() {
     zoneight234
     7pqrstsixteen";
 
-    let answer = part2(example_input2);
-
-    println!("{}", answer);
+    let answer_p2 = if use_examples {part2(&example_input2)} else {part2(&input)};
+    println!("{}", answer_p2);
 }
 
 fn part1(input: &str) -> i32 {
