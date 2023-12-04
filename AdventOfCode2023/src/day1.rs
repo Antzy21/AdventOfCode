@@ -1,4 +1,4 @@
-use std::{fs, collections::HashMap};
+use std::fs;
 
 pub fn main(use_examples: bool) {
 
@@ -44,22 +44,21 @@ fn part1(input: &str) -> i32 {
 }
 
 fn part2(input: &str) -> i32 {
-    let number_names = HashMap::from([
-        ("one", 1), ("two", 2), ("three", 3), ("four", 4), ("five", 5), 
-        ("six", 6), ("seven", 7), ("eight", 8), ("nine", 9)
-    ]);
-    let parts = input.split("\n");
-
+    // let number_names = HashMap::from([
+    //     ("one", 1), ("two", 2), ("three", 3), ("four", 4), ("five", 5), 
+    //     ("six", 6), ("seven", 7), ("eight", 8), ("nine", 9)
+    // ]);
+    
     //let mut r = "";
-    /// RUST IS STUPID
-
+    // RUST IS STUPID
+    
     // number_names.keys().fold(part, |s, &key| {
-    //     let v = number_names[&key].to_string();
-    //     r = s.replace(key, &v).as_str();
-    //     return r;
-    // });
+        //     let v = number_names[&key].to_string();
+        //     r = s.replace(key, &v).as_str();
+        //     return r;
+        // });
 
-    let sum = parts.fold(0,  |sum, part| {
+    let sum = input.split("\n").fold(0,  |sum, part| {
 
         let x = part.replace("one", "o1e").replace("two", "t2o").replace("three", "t3e")
         .replace("four", "f4r").replace("five", "f5e").replace("six", "s6x")

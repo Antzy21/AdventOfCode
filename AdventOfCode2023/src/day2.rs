@@ -25,9 +25,9 @@ impl GameSet {
         GameSet { blue, red, green }
     }
 
-    pub fn to_string(self) -> String {
-        return format!("r:{} - b:{} - g:{}", self.red, self.blue, self.green)
-    }
+    // pub fn to_string(self) -> String {
+    //     return format!("r:{} - b:{} - g:{}", self.red, self.blue, self.green)
+    // }
 }
 
 struct Game {
@@ -56,13 +56,13 @@ impl Game {
         }
     }
 
-    pub fn to_string(self) -> String {
-        let mut game_sets_str: String = "  ".to_owned();
-        for game_set in self.game_sets {
-            game_sets_str = game_sets_str + "\n  " + game_set.to_string().as_str();
-        }
-        return format!("Game {}: {}", self.game_number, game_sets_str);
-    }
+    // pub fn to_string(self) -> String {
+    //     let mut game_sets_str: String = "  ".to_owned();
+    //     for game_set in self.game_sets {
+    //         game_sets_str = game_sets_str + "\n  " + game_set.to_string().as_str();
+    //     }
+    //     return format!("Game {}: {}", self.game_number, game_sets_str);
+    // }
 }
 
 pub fn main(use_examples: bool) {
