@@ -1,4 +1,7 @@
 
+using System.Diagnostics.CodeAnalysis;
+using Microsoft.VisualBasic;
+
 namespace AdventOfCode2024;
 
 public class Day05 : IDaySolution
@@ -11,12 +14,9 @@ public class Day05 : IDaySolution
 
         foreach (var update in updates)
         {
-            bool updateIsCorrect = false;
-
-            foreach (var rule in pageOrderingRules)
-            {
-                updateIsCorrect = updateIsCorrect && UpdateFitsRule(update, rule);
-            }
+            var rulesForUpdate = GetRulesForUpdate(update, pageOrderingRules);
+            var orderedRules = OrderRules(rulesForUpdate);
+            bool updateIsCorrect = UpdateFitsAllRules(rulesForUpdate, update, out var failedUpdate);
 
             if (updateIsCorrect)
             {
@@ -24,8 +24,45 @@ public class Day05 : IDaySolution
             }
 
         }
-        
+
         return sum;
+    }
+
+    private object OrderRules(List<PageOrderingRule> rules)
+    {
+        var newList = new List<PageOrderingRule>();
+
+        while (rules.Count != 0) {
+            var highestRuleNumber = rules.First(r =>
+                rules.All(rule => rule.Second != r.First)
+            ).First;
+
+            newList.AddRange(rules.Where(r => r.First == highestRuleNumber));
+            rules.RemoveAll(r => r.First == highestRuleNumber);
+        }
+        return newList;
+    }
+
+    private static List<PageOrderingRule> GetRulesForUpdate(Update update, List<PageOrderingRule> pageOrderingRules)
+    {
+        return pageOrderingRules.Where(r =>
+            update.numbers.Contains(r.First) && update.numbers.Contains(r.Second)
+        ).ToList();
+    }
+
+    private static bool UpdateFitsAllRules(List<PageOrderingRule> pageOrderingRules, Update update, [NotNullWhen(false)] out PageOrderingRule? failedRule)
+    {
+        failedRule = null;
+
+        foreach (var rule in pageOrderingRules)
+        {
+            if (!UpdateFitsRule(update, rule)) {
+                failedRule = rule;
+                return false;
+            }
+        }
+
+        return true;
     }
 
     private static bool UpdateFitsRule(Update update, PageOrderingRule rule)
@@ -58,19 +95,10 @@ public class Day05 : IDaySolution
                 updateIsCorrect = updateIsCorrect && UpdateFitsRule(update, rule);
             }
 
-            if (!updateIsCorrect)
-            {
-                var fixedUpdate = fixUpdate(update, pageOrderingRules);
-            }
-
         }
         return sum;
     }
 
-    private Update fixUpdate(Update update, List<PageOrderingRule> pageOrderingRules)
-    {
-
-    }
 
     private static (List<PageOrderingRule>, List<Update>) ParseInput()
     {
@@ -100,11 +128,6 @@ internal record Update
             .Split(',')
             .Select(int.Parse)
             .ToList();
-    }
-
-    public void MoveValueToLeftOfAnother(int fstIndex, int sndIndex)
-    {
-        numbers.RemoveAt(first)
     }
 }
 
