@@ -1,6 +1,5 @@
 
 using System.Diagnostics.CodeAnalysis;
-using Microsoft.VisualBasic;
 
 namespace AdventOfCode2024;
 
@@ -14,25 +13,47 @@ public class Day05 : IDaySolution
 
         foreach (var update in updates)
         {
-            var rulesForUpdate = GetRulesForUpdate(update, pageOrderingRules);
-            var orderedRules = OrderRules(rulesForUpdate);
-            bool updateIsCorrect = UpdateFitsAllRules(rulesForUpdate, update, out var failedUpdate);
+            bool updateIsCorrect = UpdateFitsAllRules(pageOrderingRules, update, out var failedUpdate);
 
             if (updateIsCorrect)
             {
                 sum += update.numbers[update.numbers.Count / 2];
             }
-
         }
 
         return sum;
     }
 
-    private object OrderRules(List<PageOrderingRule> rules)
+    public int? SolvePart2()
+    {
+        var (pageOrderingRules, updates) = ParseInput();
+
+        var sum = 0;
+
+        foreach (var update in updates)
+        {
+            bool updateIsCorrect = UpdateFitsAllRules(pageOrderingRules, update, out var failedUpdate);
+
+            if (!updateIsCorrect)
+            {
+                var rulesForUpdate = GetRulesForUpdate(update, pageOrderingRules);
+                var orderedRules = OrderRules(rulesForUpdate);
+
+                var keys = orderedRules.GroupBy(r => r.First).Select(kvp => kvp.Key).Append(0).ToList();
+
+                sum += keys[keys.Count / 2];
+            }
+        }
+
+        return sum;
+    }
+
+    private static List<PageOrderingRule> OrderRules(List<PageOrderingRule> rules)
     {
         var newList = new List<PageOrderingRule>();
 
-        while (rules.Count != 0) {
+        while (rules.Count != 0)
+        {
             var highestRuleNumber = rules.First(r =>
                 rules.All(rule => rule.Second != r.First)
             ).First;
@@ -56,7 +77,8 @@ public class Day05 : IDaySolution
 
         foreach (var rule in pageOrderingRules)
         {
-            if (!UpdateFitsRule(update, rule)) {
+            if (!UpdateFitsRule(update, rule))
+            {
                 failedRule = rule;
                 return false;
             }
@@ -79,26 +101,6 @@ public class Day05 : IDaySolution
         }
         return true;
     }
-
-    public int? SolvePart2()
-    {
-        var (pageOrderingRules, updates) = ParseInput();
-
-        var sum = 0;
-
-        foreach (var update in updates)
-        {
-            bool updateIsCorrect = false;
-
-            foreach (var rule in pageOrderingRules)
-            {
-                updateIsCorrect = updateIsCorrect && UpdateFitsRule(update, rule);
-            }
-
-        }
-        return sum;
-    }
-
 
     private static (List<PageOrderingRule>, List<Update>) ParseInput()
     {
