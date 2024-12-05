@@ -11,7 +11,7 @@ public class Day05 : IDaySolution
 
         foreach (var update in updates)
         {
-            bool updateIsCorrect = true;
+            bool updateIsCorrect = false;
 
             foreach (var rule in pageOrderingRules)
             {
@@ -43,6 +43,35 @@ public class Day05 : IDaySolution
         return true;
     }
 
+    public int? SolvePart2()
+    {
+        var (pageOrderingRules, updates) = ParseInput();
+
+        var sum = 0;
+
+        foreach (var update in updates)
+        {
+            bool updateIsCorrect = false;
+
+            foreach (var rule in pageOrderingRules)
+            {
+                updateIsCorrect = updateIsCorrect && UpdateFitsRule(update, rule);
+            }
+
+            if (!updateIsCorrect)
+            {
+                var fixedUpdate = fixUpdate(update, pageOrderingRules);
+            }
+
+        }
+        return sum;
+    }
+
+    private Update fixUpdate(Update update, List<PageOrderingRule> pageOrderingRules)
+    {
+
+    }
+
     private static (List<PageOrderingRule>, List<Update>) ParseInput()
     {
         var lines = File.ReadAllLines("inputs/day5.txt");
@@ -59,11 +88,6 @@ public class Day05 : IDaySolution
 
         return (part1, part2);
     }
-
-    public int? SolvePart2()
-    {
-        return null;
-    }
 }
 
 internal record Update
@@ -76,6 +100,11 @@ internal record Update
             .Split(',')
             .Select(int.Parse)
             .ToList();
+    }
+
+    public void MoveValueToLeftOfAnother(int fstIndex, int sndIndex)
+    {
+        numbers.RemoveAt(first)
     }
 }
 
