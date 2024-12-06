@@ -11,20 +11,42 @@ public class Day06 : IDaySolution
     {
         var map = ParseInput();
 
-        var isGuardOutOfBounds = map.IsGuardOutOfBounds();
-        while (!isGuardOutOfBounds) {
+        while (!map.IsGuardOutOfBounds()) {
             map.MoveGuard();
-            isGuardOutOfBounds = map.IsGuardOutOfBounds();
         }
         
-        Console.WriteLine($"{map}");
-        
-        return map.PathCount();
+        return map.GetPathCoords().Count;
     }
 
     public int? SolvePart2()
     {
-        return null;
+        var map = ParseInput();
+
+        while (!map.IsGuardOutOfBounds()) {
+            map.MoveGuard();
+        }
+
+        var pathCoords = map.GetPathCoords(ignoreStart: true);
+        
+        var repeatingPatrolCount = 0;
+
+        foreach (var (x,y) in pathCoords)
+        {
+            var newMap = ParseInput();
+            newMap.charAry[x][y] = '#';
+
+            var guardIsOnRepeatingSquare = false;
+            while (!(newMap.IsGuardOutOfBounds() || guardIsOnRepeatingSquare)) {
+                guardIsOnRepeatingSquare = newMap.GuardAboutToRepeat();
+                newMap.MoveGuard();
+
+                if (guardIsOnRepeatingSquare) {
+                    repeatingPatrolCount ++;                 
+                }
+            }
+        }
+        
+        return repeatingPatrolCount;
     }
 
     private static Map ParseInput()
@@ -45,6 +67,8 @@ internal class Map
 
     public char[][] charAry;
     public Guard guard;
+    private int guardStartX;
+    private int guardStartY;
 
     public Map(char[][] map)
     {
@@ -66,7 +90,6 @@ internal class Map
         }
         var valAtPos = charAry[x][y];
         if (valAtPos == '#') {
-            charAry[guard.X][guard.Y] = '+';
             guard.RotateRight();
         }
         else {
@@ -100,6 +123,8 @@ internal class Map
                 {
                     if (type == charAry[i][j])
                     {
+                        guardStartX = i;
+                        guardStartY = j;
                         return new Guard(i,j, type);
                     }
                 }
@@ -108,18 +133,30 @@ internal class Map
         throw new Exception("Cannot find Guard");
     }
 
-    internal int? PathCount()
+    internal List<(int,int)> GetPathCoords(bool ignoreStart = false)
     {
-        var count = 0;
-        foreach (var line in charAry)
+        var list = new List<(int, int)>();
+        for (int i = 0; i < charAry.Length; i++)
         {
-            foreach (var character in line)
+            for (int j = 0; j < charAry[i].Length; j++)
             {
+                char character = charAry[i][j];
                 if (character != '.' && character != '#')
-                    count ++;
+                    list.Add((i,j));
             }
         }
-        return count;
+        if (ignoreStart) {
+            list.Remove((guardStartX, guardStartY));
+        }
+        return list;
+    }
+
+    internal bool GuardAboutToRepeat()
+    {
+        var (x,y) = guard.GetPositionAhead();
+        if (!IsPositionOutOfBounds(x,y))
+            return guard.Type == charAry[x][y];
+        return false;
     }
 }
 
@@ -164,14 +201,6 @@ internal class Guard(int X, int Y, char Type)
 
     internal char GetTrailType(bool isCross)
     {
-        if (isCross) {
-            return '+';
-        }
-        return Type switch
-        {
-            '^' or 'V' => '|',
-            '>' or '<' => '-',
-            _ => throw new Exception("Invalid Guard"),
-        };
+        return Type;
     }
 }
