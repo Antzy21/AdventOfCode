@@ -7,22 +7,23 @@ public class Day07 : IDaySolution
     {
         var input = ParseInput();
 
-        var sum = 0;
+        long sum = 0;
         foreach (var (target, numbers) in input)
         {            
             if (CanBeSolved(target, numbers[1 ..], numbers[0], $"{numbers[0]}")) {
-                sum += (int)target;
+                sum += target;
             }
-            Console.WriteLine($"---");
         }
-        return sum;
+        Console.WriteLine($"Day 7 Part 1: {sum}");
+
+        return (int)sum;
     }
 
     private static bool CanBeSolved(long testValue, List<long> numbers, long current, string helper)
     {
-        Console.WriteLine($"{helper, 20} = {current, -5} {(current==testValue ? "=":"?")} {testValue} - [{string.Join(", ",numbers)}]");
-
         if (numbers.Count == 0) {
+            var symbol = (current==testValue) ? "=" : (current < testValue) ? "<" : ">";
+            // Console.WriteLine($"{helper, 40} = {current, -12} {symbol} {testValue}");
             return testValue == current;
         }
 
