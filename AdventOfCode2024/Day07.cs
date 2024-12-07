@@ -10,7 +10,7 @@ public class Day07 : IDaySolution
         long sum = 0;
         foreach (var (target, numbers) in input)
         {            
-            if (CanBeSolved(target, numbers[1 ..], numbers[0], $"{numbers[0]}")) {
+            if (CanBeSolved(target, numbers[1 ..], numbers[0])) {
                 sum += target;
             }
         }
@@ -19,11 +19,9 @@ public class Day07 : IDaySolution
         return (int)sum;
     }
 
-    private static bool CanBeSolved(long testValue, List<long> numbers, long current, string helper)
+    private static bool CanBeSolved(long testValue, List<long> numbers, long current, bool useConcatenationOperator = false)
     {
         if (numbers.Count == 0) {
-            var symbol = (current==testValue) ? "=" : (current < testValue) ? "<" : ">";
-            // Console.WriteLine($"{helper, 40} = {current, -12} {symbol} {testValue}");
             return testValue == current;
         }
 
@@ -35,7 +33,7 @@ public class Day07 : IDaySolution
 
         // Overshoot
         if (multiplyResult <= testValue) {
-            var solvedByMultiplying = CanBeSolved(testValue, numbers[1 ..], multiplyResult, helper+$" * {numbers[0]}");
+            var solvedByMultiplying = CanBeSolved(testValue, numbers[1 ..], multiplyResult, useConcatenationOperator);
 
             if (solvedByMultiplying)
                 return true;
@@ -43,10 +41,22 @@ public class Day07 : IDaySolution
 
         // Overshoot
         if (sumResult <= testValue) {
-            var solvedBySumming = CanBeSolved(testValue, numbers[1 ..], sumResult, helper+$" + {numbers[0]}");
+            var solvedBySumming = CanBeSolved(testValue, numbers[1 ..], sumResult, useConcatenationOperator);
 
             if (solvedBySumming)
                 return true;
+        }
+
+        if (useConcatenationOperator) {
+            var concatResult = long.Parse($"{current}{numbers[0]}");
+
+            // Overshoot
+            if (concatResult <= testValue) {
+                var solvedByConcat = CanBeSolved(testValue, numbers[1 ..], concatResult, useConcatenationOperator);
+
+                if (solvedByConcat)
+                    return true;
+            }
         }
 
         return false;
@@ -54,7 +64,18 @@ public class Day07 : IDaySolution
 
     public int? SolvePart2()
     {
-        return null;
+        var input = ParseInput();
+
+        long sum = 0;
+        foreach (var (target, numbers) in input)
+        {            
+            if (CanBeSolved(target, numbers[1 ..], numbers[0], useConcatenationOperator: true)) {
+                sum += target;
+            }
+        }
+        Console.WriteLine($"Day 7 Part 2: {sum}");
+
+        return (int)sum;
     }
 
     private List<(long, List<long>)> ParseInput()
