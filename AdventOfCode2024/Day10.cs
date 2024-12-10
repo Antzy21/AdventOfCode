@@ -7,14 +7,23 @@ public class Day10 : IDaySolution
     {
         var map = ParseInput();
 
-        var trailHeads = new List<TrailHead>();
+        var trailHeads = CalculateTrails<HashSet<Position>>(map);
+
+        return trailHeads.Select(th => th._Trail[9].Count).Sum();
+    }
+
+    private static List<TrailHead<TPositionCollection>> CalculateTrails<TPositionCollection>(int[][] map)
+        where TPositionCollection : ICollection<Position>, new()
+    {
+        var trailHeads = new List<TrailHead<TPositionCollection>>();
+
         for (int i = 0; i < map.Length; i++)
         {
             for (int j = 0; j < map[0].Length; j++)
             {
                 if (map[i][j] == 0)
                 {
-                    trailHeads.Add(new(i, j));
+                    trailHeads.Add(new TrailHead<TPositionCollection>(i, j));
                 }
             }
         }
@@ -27,12 +36,16 @@ public class Day10 : IDaySolution
             }
         }
 
-        return trailHeads.Select(th => th._Trail[9].Count()).Sum();
+        return trailHeads;
     }
 
     public int? SolvePart2()
     {
-        return null;
+        var map = ParseInput();
+
+        var trailHeads = CalculateTrails<List<Position>>(map);
+
+        return trailHeads.Select(th => th._Trail[9].Count).Sum();
     }
 
     private static int[][] ParseInput()
@@ -44,18 +57,18 @@ public class Day10 : IDaySolution
                 .ToArray()
             ).ToArray();
     }
-
 }
 
-internal record TrailHead
+internal record TrailHead<TPositionCollection>
+    where TPositionCollection : ICollection<Position>, new()
 {
     public Position init;
-    public Dictionary<int, HashSet<Position>> _Trail;
+    public Dictionary<int, TPositionCollection> _Trail;
 
     public TrailHead(int X, int Y)
     {
         init = new(X, Y);
-        _Trail = new Dictionary<int, HashSet<Position>> {
+        _Trail = new Dictionary<int, TPositionCollection> {
             { 0, [init] }
         };
     }
