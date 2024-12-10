@@ -75,10 +75,9 @@ public class Day09 : IDaySolution
         var fs = new AocFileSystem(diskMap);
         Console.WriteLine($"{fs}");
 
-        var reversedFileList = new List<AocFileSlot>(fs.DiskSlots.Where(ds => ds.File != null));
-        reversedFileList.Reverse();
+        var reversedFileList = new List<AocFileSlot>(fs.DiskSlots.Where(ds => ds.File != null).OrderByDescending(ds => ds.File?.Id));
 
-        foreach (var fileSlot in fs.DiskSlots.Where(ds => ds.File != null).OrderByDescending(ds => ds.File?.Id))
+        foreach (var fileSlot in reversedFileList)
         {
             var spaceSlot = fs.DiskSlots.FirstOrDefault(s =>
                 s.Size >= fileSlot.Size &&
@@ -110,6 +109,7 @@ public class Day09 : IDaySolution
     {
         return
             File.ReadAllText("inputs/day9.txt")
+            .Trim()
             .ToCharArray()
             .Select(x => int.Parse($"{x}"));
     }
