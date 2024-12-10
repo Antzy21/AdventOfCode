@@ -1,3 +1,5 @@
+using System.Data.Common;
+
 namespace AdventOfCode2024;
 
 public class Day09 : IDaySolution
@@ -71,36 +73,33 @@ public class Day09 : IDaySolution
         var diskMap = ParseInput().ToArray();
 
         var fs = new AocFileSystem(diskMap);
+        Console.WriteLine($"{fs}");
 
-        var reversedFileList = new List<AocFile>(fs.Files);
+        var reversedFileList = new List<AocFileSlot>(fs.DiskSlots.Where(ds => ds.File != null));
         reversedFileList.Reverse();
 
-        foreach (var file in reversedFileList)
+        foreach (var fileSlot in fs.DiskSlots.Where(ds => ds.File != null).OrderByDescending(ds => ds.File?.Id))
         {
-            var spaceToFitIndex = fs.Spaces.FindIndex(s => s.Size >= file.Size);
+            var spaceSlot = fs.DiskSlots.FirstOrDefault(s =>
+                s.Size >= fileSlot.Size &&
+                s.DiskPos < fileSlot.DiskPos &&
+                s.File == null
+            );
 
-            if (file.Id < spaceToFitIndex)
-                continue;
-
-            if (spaceToFitIndex != -1)
+            if (spaceSlot != null)
             {
-                var spaceToFit = fs.Spaces[spaceToFitIndex];
-                var fileIndex = fs.Files.FindIndex(f => f == file);
-
                 // Handle insert of File at front
-                var newSpace = new AocFileSpace(spaceToFit.Size-file.Size);
-                spaceToFit.Size = 0;
-                fs.Files.Insert(spaceToFitIndex+1, file);
-                fs.Spaces.Insert(spaceToFitIndex+1, newSpace);
+                fileSlot.DiskPos = spaceSlot.DiskPos;
+                spaceSlot.DiskPos += fileSlot.Size;
+                spaceSlot.Size -= fileSlot.Size;
 
                 // Handle remove of File at back
-                fs.Spaces[fileIndex].Size += file.Size + fs.Spaces[fileIndex+1].Size;
-                fs.Files.RemoveAt(fileIndex+1);
-                fs.Spaces.RemoveAt(fileIndex+1);
+                // Console.WriteLine($"{fs}");
             }
         }
 
-        long result = CheckSum(fs.ToDiskMap());
+        long result = fs.CheckSum();
+        
         Console.WriteLine($"{fs}");
         Console.WriteLine($"Day 9 Part 2: {result}");
 
@@ -118,69 +117,68 @@ public class Day09 : IDaySolution
 
 internal class AocFileSystem
 {
-    public List<AocFile> Files { get; set; }
-    public List<AocFileSpace> Spaces { get; set; }
+    public List<AocFileSlot> DiskSlots { get; set; }
 
     public AocFileSystem(int[] diskMap)
     {
-        Spaces = [];
-        Files = [];
+        DiskSlots = [];
 
         var idCounter = 0;
         var isFile = true;
+        var diskPos = 0;
 
         for (int i = 0; i < diskMap.Length; i++)
         {
             if (isFile)
             {
-                Files.Add(new(idCounter, diskMap[i]));
+                DiskSlots.Add(new(diskMap[i], diskPos, new AocFile(idCounter)));
                 idCounter++;
             }
             else
             {
-                Spaces.Add(new(diskMap[i]));
+                DiskSlots.Add(new(diskMap[i], diskPos));
             }
+            diskPos += diskMap[i];
             isFile = !isFile;
         }
-        if (Files.Count > Spaces.Count)
-            Spaces.Add(new(0));
     }
 
-    public char[] ToDiskMap() {
-        return ToString().ToCharArray();
+    public long CheckSum() {
+        return DiskSlots.Select(f => f.CheckSum()).Sum();
     }
 
     public override string ToString()
     {
-        var s = "";
-        foreach (var (file, space) in Files.Zip(Spaces))
-        {
-            s += $"{file}{space}";
-        }
-        return s;
+        return string.Concat(DiskSlots.OrderBy(ds => ds.DiskPos).Select(d => d.ToString()));
     }
 }
 
-internal record AocFileSpace(int Size)
+internal record AocFileSlot(int Size, int DiskPos, AocFile? File = null)
 {
     public int Size { get; set; } = Size;
+    public int DiskPos { get; set; } = DiskPos;
+    public AocFile? File {get; set; } = File;
     public override string ToString()
     {
         if (Size < 0)
             throw new Exception($"Size {Size} cannot be less than zero");
-        return string.Concat(Enumerable.Repeat('.', Size));
+        return string.Concat(Enumerable.Repeat(File?.ToString() ?? ".", Size));
+    }
+
+    public long CheckSum() {
+        var result = 0;
+        for (int i = DiskPos; i < DiskPos + Size; i++)
+            result += i * (File?.Id ?? 0);
+        return result;
     }
 }
 
-internal record AocFile(int Id, int Size)
-{
+internal record AocFile(int Id, bool HasBeenMoved = false) {
     public override string ToString()
     {
-        if (Size == 0)
-            return "";
-        return string.Concat(Enumerable.Repeat(Converter.IntToChar(Id), Size));
+        return (Id % 10).ToString();
     }
-}
+};
 
 internal static class Converter {
     public static int CharToInt(char c)
