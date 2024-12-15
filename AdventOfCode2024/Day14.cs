@@ -1,9 +1,13 @@
+using System.Text;
 using System.Text.RegularExpressions;
 
 namespace AdventOfCode2024;
 
 public class Day14 : IDaySolution
 {
+    private readonly int width = 101;
+    private readonly int height = 103;
+    
     public int? SolvePart1()
     {
         var robots = ParseInput();
@@ -12,10 +16,8 @@ public class Day14 : IDaySolution
         var height = 103;
         var dividingWidth = width / 2;
         var dividingHeight = height / 2;
-        Console.WriteLine($"height: {dividingHeight}, width:{dividingWidth}");
 
-
-        PrintMap(robots, width, height);
+        MapToString(robots);
 
         foreach (var robot in robots)
         {
@@ -23,9 +25,7 @@ public class Day14 : IDaySolution
             robot.CalculateQuadrant(dividingWidth, dividingHeight);
         }
 
-        PrintMap(robots, width, height);
-
-        PrintMap(robots, width, height, blockMiddle: true);
+        MapToString(robots);
 
         var quadrantCounts = robots
             .Where(r => r.QuadrantId != 0)
@@ -40,31 +40,55 @@ public class Day14 : IDaySolution
 
     public int? SolvePart2()
     {
-        return 0;
+        var robots = ParseInput();
+        var width = 101;
+        var height = 103;
+
+        MoveRobots(robots, width, height, 6355);
+
+        var map = MapToString(robots, standardiseNumber: true);
+
+        return 6355;
     }
 
-    private static void PrintMap(List<Robot> robots, int width, int height, bool blockMiddle = false)
+    private static void MoveRobots(List<Robot> robots, int width, int height, int times = 1)
     {
+        foreach (var robot in robots)
+        {
+            MoveRobot(robot, width, height, times);
+        }
+    }
+
+    private string MapToString(List<Robot> robots, int dividor = 1, bool standardiseNumber = false)
+    {
+        var strBldr = new StringBuilder();
         for (int j = 0; j < height; j++)
         {
             for (int i = 0; i < width; i++)
             {
-                if (i == width / 2 || j == height / 2 && blockMiddle)
+                if (dividor != 1 && IsPosOnBoundry(j, i, dividor))
                 {
-                    Console.Write($" ");
+                    strBldr.Append(" ");
+                }
+                if (standardiseNumber) {
+                    var c = robots.Any(r => r.Pos == new Position(i, j)) ? "#" : ".";
+                    strBldr.Append($"{c}");
                 }
                 else
                 {
                     var robotsOnSpot = robots.Count(r => r.Pos == new Position(i, j));
                     var robotsOnSpotChar = robotsOnSpot == 0 ? "." : robotsOnSpot.ToString();
-                    Console.Write($"{robotsOnSpotChar}");
-
+                    strBldr.Append($"{robotsOnSpotChar}");
                 }
-
             }
-            Console.WriteLine();
+            strBldr.AppendLine();
         }
-        Console.WriteLine("---------------");
+        return strBldr.ToString();
+    }
+
+    private bool IsPosOnBoundry(int j, int i, int dividor)
+    {
+        return i == width / dividor || j == height / dividor;
     }
 
     private static void MoveRobot(Robot robot, int width, int height, int times = 1)
