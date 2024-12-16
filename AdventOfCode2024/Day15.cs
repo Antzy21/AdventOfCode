@@ -8,22 +8,27 @@ public class Day15 : IDaySolution
     {
         var (map, moves) = ParseInput();
 
-        Console.WriteLine($"{MapToString(map)}");
-
         foreach (var move in moves)
         {
             map.TryMove(move);
         }
-        Console.WriteLine($"{MapToString(map)}");
 
         return (int)map.SumOfBoxsGpsCoord();
     }
 
     public int? SolvePart2()
     {
-        return 0;
-    }
+        var (map, moves) = ParseInput();
 
+        map = DoubleMap(map);
+
+        foreach (var move in moves)
+        {
+            map.TryMove(move);
+        }
+
+        return (int)map.SumOfBoxsGpsCoord();
+    }
 
     private static string MapToString(Map15 map)
     {
@@ -34,6 +39,32 @@ public class Day15 : IDaySolution
             s.AppendLine();
         }
         return s.ToString();
+    }
+
+    private static Map15 DoubleMap(Map15 map)
+    {
+        var doubledMap = map._map.Select((row, i) =>
+        {
+            return row.SelectMany((c, j) =>
+            {
+                switch (c)
+                {
+                    case '#':
+                        return new char[] { '#', '#' };
+                    case '.':
+                        return ['.', '.'];
+                    case 'O':
+                        return ['[', ']'];
+                    case '@':
+                        map.BotPos = new(i, j * 2);
+                        return ['@', '.'];
+                    default:
+                        throw new Exception($"Bad char {c}");
+                };
+            }).ToArray();
+        }
+        ).ToArray();
+        return new(doubledMap, map.BotPos);
     }
 
     private static Tuple<Map15, char[]> ParseInput()
@@ -56,6 +87,11 @@ internal class Map15
     public Position BotPos;
     public char[][] _map;
 
+    public Map15(char[][] map, Position pos)
+    {
+        _map = map;
+        BotPos = pos;
+    }
     public Map15(string rawMap)
     {
         _map = rawMap
@@ -76,7 +112,7 @@ internal class Map15
             throw new Exception("No bot found");
     }
 
-    internal bool TryMove(char moveChar, Position? pos = null)
+    internal bool TryMove(char moveChar, Position? pos = null, bool withoutMoving = false)
     {
         pos ??= BotPos;
 
@@ -87,27 +123,91 @@ internal class Map15
             case '#':
                 return false;
             case '.':
-                _map[newPos.X][newPos.Y] = _map[pos.X][pos.Y];
-                _map[pos.X][pos.Y] = '.';
-                if (pos == BotPos)
-                    BotPos = new(newPos.X, newPos.Y);
+                if (!withoutMoving)
+                    UpdateMap(pos, newPos);
                 return true;
             case 'O':
                 if (TryMove(moveChar, newPos))
                 {
-                    _map[newPos.X][newPos.Y] = _map[pos.X][pos.Y];
-                    _map[pos.X][pos.Y] = '.';
-                    if (pos == BotPos)
-                        BotPos = new(newPos.X, newPos.Y);
+                    if (!withoutMoving)
+                        UpdateMap(pos, newPos);
                     return true;
                 }
                 else
                 {
                     return false;
                 }
+            case '[':
+                if (MoveIsLeftOrRight(moveChar))
+                {
+                    if (TryMove(moveChar, newPos, withoutMoving))
+                    {
+                        if (!withoutMoving)
+                            UpdateMap(pos, newPos);
+                        return true;
+                    }
+                    else
+                    {
+                        return false;
+                    }
+                }
+                else
+                {
+                    var extraBlockPos = new Position(newPos.X, newPos.Y + 1);
+                    if (TryMove(moveChar, newPos, withoutMoving: true) && TryMove(moveChar, extraBlockPos, withoutMoving: true))
+                    {
+                        TryMove(moveChar, newPos, withoutMoving);
+                        TryMove(moveChar, extraBlockPos, withoutMoving);
+                        if (!withoutMoving)
+                            UpdateMap(pos, newPos);
+                        return true;
+                    }
+                    else
+                    {
+                        return false;
+                    }
+                }
+            case ']':
+                if (MoveIsLeftOrRight(moveChar))
+                {
+                    if (TryMove(moveChar, newPos, withoutMoving))
+                    {
+                        if (!withoutMoving)
+                            UpdateMap(pos, newPos);
+                        return true;
+                    }
+                    else
+                    {
+                        return false;
+                    }
+                }
+                else
+                {
+                    var extraBlockPos = new Position(newPos.X, newPos.Y - 1);
+                    if (TryMove(moveChar, newPos, withoutMoving: true) && TryMove(moveChar, extraBlockPos, withoutMoving: true))
+                    {
+                        TryMove(moveChar, newPos, withoutMoving);
+                        TryMove(moveChar, extraBlockPos, withoutMoving);
+                        if (!withoutMoving)
+                            UpdateMap(pos, newPos);
+                        return true;
+                    }
+                    else
+                    {
+                        return false;
+                    }
+                }
             default:
                 throw new Exception($"Bad char {_map[newPos.X][newPos.Y]}");
         }
+    }
+
+    private void UpdateMap(Position pos, Position newPos)
+    {
+        _map[newPos.X][newPos.Y] = _map[pos.X][pos.Y];
+        _map[pos.X][pos.Y] = '.';
+        if (pos == BotPos)
+            BotPos = new(newPos.X, newPos.Y);
     }
 
     private static Position GetNewPos(char move, Position pos)
@@ -124,17 +224,23 @@ internal class Map15
             new Exception($"Bad move '{move}'");
     }
 
-    public long SumOfBoxsGpsCoord() {
+    private static bool MoveIsLeftOrRight(char moveChar)
+    {
+        return moveChar == '<' || moveChar == '>';
+    }
+
+    public long SumOfBoxsGpsCoord()
+    {
         long sum = 0;
         for (int i = 0; i < _map.Length; i++)
         {
             for (int j = 0; j < _map[0].Length; j++)
             {
-                if (_map[i][j] == 'O')
-                    sum += CaculateGpsCoord(i,j);
+                if (_map[i][j] == 'O' || _map[i][j] == '[')
+                    sum += CaculateGpsCoord(i, j);
             }
         }
-        return sum;    
+        return sum;
     }
 
     private long CaculateGpsCoord(int i, int j)
