@@ -7,15 +7,34 @@ public class Day17 : IDaySolution
         var computer = ParseInput();
 
         var output = computer.RunInstructions();
-        Console.WriteLine($"{computer}");
-        Console.WriteLine($"{output}");
+        Console.WriteLine($"Day 17 Part 1: {output}");
 
         return 0;
     }
 
     public int? SolvePart2()
     {
-        return null;
+        var computer = ParseInput();
+
+        var output = computer.RunInstructions();
+        var expected = string.Join(',', computer.Program);
+
+        long a = 46672426; // 46672429, 46672431 also work.
+
+        while (output != expected)
+        {
+            a += 2<<26;
+            computer.RegisterA = a;
+            computer.RegisterB = 0;
+            computer.RegisterC = 0;
+            computer.ptr = 0;
+            computer.output = [];
+            output = computer.RunInstructions(true);
+        }
+
+        Console.WriteLine($"Day 17 Part 2: {a}");
+
+        return (int)a;
     }
 
     private static Computer ParseInput()
@@ -36,14 +55,17 @@ public class Day17 : IDaySolution
 
 internal class Computer(List<int> Program, int RegisterA, int RegisterB, int RegisterC)
 {
-    public int RegisterA { get; set; } = RegisterA;
-    public int RegisterB { get; set; } = RegisterB;
-    public int RegisterC { get; set; } = RegisterC;
+    public long RegisterA { get; set; } = RegisterA;
+    public long RegisterB { get; set; } = RegisterB;
+    public long RegisterC { get; set; } = RegisterC;
     public List<int> Program { get; set; } = Program;
 
     public int ptr = 0;
 
     public List<int> output = [];
+    private bool _halt = false;
+    private bool _expectProgram = false;
+
     public string OutputString { get { return string.Join(',', output); } }
 
     public override string ToString()
@@ -59,9 +81,11 @@ internal class Computer(List<int> Program, int RegisterA, int RegisterB, int Reg
             "---------------------";
     }
 
-    internal string RunInstructions()
+    internal string RunInstructions(bool expectProgram = false)
     {
-        while (ptr < Program.Count)
+        _expectProgram = expectProgram;
+        _halt = false;
+        while (ptr < Program.Count && !_halt)
         {
             RunInstruction();
             ptr += 2;
@@ -94,6 +118,8 @@ internal class Computer(List<int> Program, int RegisterA, int RegisterB, int Reg
                 break;
             case 5:
                 Out(operand);
+                if (_expectProgram && output[^1] != Program[output.Count - 1])
+                    _halt = true;
                 break;
             case 6:
                 Bdv(operand);
@@ -104,7 +130,7 @@ internal class Computer(List<int> Program, int RegisterA, int RegisterB, int Reg
         }
     }
 
-    private int GetComboOp(int operand)
+    private long GetComboOp(int operand)
     {
         return operand switch
         {
@@ -116,7 +142,7 @@ internal class Computer(List<int> Program, int RegisterA, int RegisterB, int Reg
         };
     }
 
-    private void Adv(int operand) => RegisterA >>= GetComboOp(operand);
+    private void Adv(int operand) => RegisterA = RegisterA >> (int)GetComboOp(operand);
 
     private void Bxl(int operand) => RegisterB ^= operand;
 
@@ -126,9 +152,9 @@ internal class Computer(List<int> Program, int RegisterA, int RegisterB, int Reg
 
     private void Bxc(int _) => RegisterB ^= RegisterC;
 
-    private void Out(int operand) => output.Add(GetComboOp(operand) % 8);
+    private void Out(int operand) => output.Add((int)(GetComboOp(operand) % 8));
 
-    private void Bdv(int operand) => RegisterB = RegisterA >> GetComboOp(operand);
+    private void Bdv(int operand) => RegisterB = RegisterA >> (int)GetComboOp(operand);
 
-    private void Cdv(int operand) => RegisterC = RegisterA >> GetComboOp(operand);
+    private void Cdv(int operand) => RegisterC = RegisterA >> (int)GetComboOp(operand);
 }
