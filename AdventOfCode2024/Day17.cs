@@ -1,8 +1,3 @@
-
-
-
-using System.Text;
-
 namespace AdventOfCode2024;
 
 public class Day17 : IDaySolution
@@ -12,7 +7,7 @@ public class Day17 : IDaySolution
         var computer = ParseInput();
 
         var output = computer.RunInstructions();
-        Console.WriteLine($"{computer}\n------");
+        Console.WriteLine($"{computer}");
         Console.WriteLine($"{output}");
 
         return 0;
@@ -49,15 +44,19 @@ internal class Computer(List<int> Program, int RegisterA, int RegisterB, int Reg
     public int ptr = 0;
 
     public List<int> output = [];
+    public string OutputString { get { return string.Join(',', output); } }
 
     public override string ToString()
     {
-        return $"Register A: {RegisterA}\n" +
-            $"Register B: {RegisterB}\n" +
-            $"Register C: {RegisterC}\n"+
-            $"\n" +
-            $"Program: {string.Join(',', Program)}\n" +
-            string.Join("", Enumerable.Repeat(' ', 9 + ptr*2)) + "^ ^";
+        return "---------------------\n" +
+            $"|Register A: {RegisterA}\n" +
+            $"|Register B: {RegisterB}\n" +
+            $"|Register C: {RegisterC}\n" +
+            $"|\n" +
+            $"|Program: {string.Join(',', Program)}\n" +
+            "|" + string.Join("", Enumerable.Repeat(' ', 9 + ptr * 2)) + "^ ^\n" +
+            $"|'{OutputString}'\n" +
+            "---------------------";
     }
 
     internal string RunInstructions()
@@ -67,7 +66,7 @@ internal class Computer(List<int> Program, int RegisterA, int RegisterB, int Reg
             RunInstruction();
             ptr += 2;
         }
-        return string.Join(',', output);
+        return OutputString;
     }
 
     private void RunInstruction()
@@ -105,7 +104,8 @@ internal class Computer(List<int> Program, int RegisterA, int RegisterB, int Reg
         }
     }
 
-    private int GetComboOp(int operand) {
+    private int GetComboOp(int operand)
+    {
         return operand switch
         {
             0 or 1 or 2 or 3 => operand,
@@ -128,7 +128,7 @@ internal class Computer(List<int> Program, int RegisterA, int RegisterB, int Reg
 
     private void Out(int operand) => output.Add(GetComboOp(operand) % 8);
 
-    private void Bdv(int operand) => RegisterB = RegisterA >> operand;
+    private void Bdv(int operand) => RegisterB = RegisterA >> GetComboOp(operand);
 
-    private void Cdv(int operand) => RegisterC = RegisterA >> operand;
+    private void Cdv(int operand) => RegisterC = RegisterA >> GetComboOp(operand);
 }
