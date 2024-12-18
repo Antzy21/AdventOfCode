@@ -6,7 +6,6 @@ public class Day18 : IDaySolution
 {
     private const int _bytesToDrop = 1024;
     private readonly int _mapSize = 70;
-    private readonly Dictionary<Position, int> _exploredPositions = [];
 
     private Position _startPos;
     private Position _endPos;
@@ -18,7 +17,6 @@ public class Day18 : IDaySolution
         _endPos = new(_mapSize, _mapSize);
         _map = Enumerable.Repeat(Enumerable.Repeat('.', _mapSize + 1), _mapSize + 1)
             .Select(dots => dots.ToArray()).ToArray();
-        _exploredPositions.Add(_startPos, 0);
     }
 
     public int? SolvePart1()
@@ -26,18 +24,47 @@ public class Day18 : IDaySolution
         var bytes = ParseInput();
         DropBytesOnMap(bytes[0.._bytesToDrop]);
 
+        Dictionary<Position, int> exploredPositions = [];
+        exploredPositions.Add(_startPos, 0);
+
         var currentStatesToExplore = new List<Position>() {_startPos};
 
-        while (!_exploredPositions.ContainsKey(_endPos)) {
-            currentStatesToExplore = ExploreMap(currentStatesToExplore);
+        while (!exploredPositions.ContainsKey(_endPos)) {
+            currentStatesToExplore = ExploreMap(exploredPositions, currentStatesToExplore);
         }
 
-        return _exploredPositions[_endPos];
+        return exploredPositions[_endPos];
     }
 
     public int? SolvePart2()
     {
-        return 0;
+        var bytes = ParseInput();
+        DropBytesOnMap(bytes[0.._bytesToDrop]);
+
+        Position? killerByte = null;
+        int byteIndex = _bytesToDrop;
+        while (killerByte == null)
+        {
+            byteIndex ++;
+            DropBytesOnMap([bytes[byteIndex]]);
+
+            Dictionary<Position, int> exploredPositions = [];
+            exploredPositions.Add(_startPos, 0);
+
+            var currentStatesToExplore = new List<Position>() {_startPos};
+
+            while (!exploredPositions.ContainsKey(_endPos)) {
+                currentStatesToExplore = ExploreMap(exploredPositions, currentStatesToExplore);
+                if (currentStatesToExplore.Count == 0) {
+                    killerByte = bytes[byteIndex];
+                    break;
+                }
+            }
+        }
+
+        Console.WriteLine($"Day 18 Part 2: ({killerByte.X},{killerByte.Y})");
+        
+        return byteIndex;
     }
 
     private void DropBytesOnMap(Position[] bytes)
@@ -48,13 +75,13 @@ public class Day18 : IDaySolution
         }
     }
 
-    private List<Position> ExploreMap(List<Position> currentStatesToExplore)
+    private List<Position> ExploreMap(Dictionary<Position, int> exploredPositions, List<Position> currentStatesToExplore)
     {
         var newCurrentStates = new List<Position>();
 
         foreach (var pos in currentStatesToExplore)
         {
-            var newScore = _exploredPositions[pos] + 1;
+            var newScore = exploredPositions[pos] + 1;
             var newPositions = new List<Position>() {
                 new(pos.X+1, pos.Y),
                 new(pos.X-1, pos.Y),
@@ -66,9 +93,9 @@ public class Day18 : IDaySolution
 
             foreach (var newPos in newPositions)
             {
-                if (!_exploredPositions.TryGetValue(newPos, out var existingScore) || newScore < existingScore)
+                if (!exploredPositions.TryGetValue(newPos, out var existingScore) || newScore < existingScore)
                 {
-                    _exploredPositions[newPos] = newScore;
+                    exploredPositions[newPos] = newScore;
                     newCurrentStates.Add(newPos);
                 }
             }
@@ -78,14 +105,15 @@ public class Day18 : IDaySolution
         return currentStatesToExplore;
     }
 
-    private string MapToString()
+    private string MapToString(Dictionary<Position, int>? exploredPositions = null)
     {
+        exploredPositions ??= [];
         var str = new StringBuilder();
         for (int j = 0; j < _map.Length; j++)
         {
             for (int i = 0; i < _map[j].Length; i++)
             {
-                if (_exploredPositions.ContainsKey(new(i,j)))
+                if (exploredPositions.ContainsKey(new(i,j)))
                     str.Append('O');
                 else
                     str.Append(_map[i][j]);
