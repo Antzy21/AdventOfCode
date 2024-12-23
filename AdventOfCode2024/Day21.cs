@@ -10,13 +10,20 @@ public class Day21 : IDaySolution
 
         return codes.Select(code =>
         {
-            var buttonSequence1 = GetButtonSequence(code, GetRobotInstructionsToPressKeypad);
-            
-            var buttonSequence2 = buttonSequence1.SelectMany(bs => GetButtonSequence(bs, GetRobotInstructionsToPressArrows));
+            var buttonSequence = GetButtonSequence(code, RobotInstructionsToPressKeypad);
 
-            var buttonSequence3 = buttonSequence2.SelectMany(bs => GetButtonSequence(bs, GetRobotInstructionsToPressArrows));
+            for (int i = 0; i < 2; i++)
+            {
+                buttonSequence = buttonSequence
+                    .SelectMany(bs => GetButtonSequence(bs, RobotInstructionsToPressArrows))
+                    .ToList();
 
-            var minBs = buttonSequence3.MinBy(bs => bs.Length)!;
+                buttonSequence = buttonSequence
+                    .Where(bs => !buttonSequence.Any(bs2 => bs2.Length < bs.Length))
+                    .ToList();
+            }
+
+            var minBs = buttonSequence.MinBy(bs => bs.Length)!;
 
             return GetCodeNum(code) * minBs.Length;
         }).Sum();
@@ -24,7 +31,32 @@ public class Day21 : IDaySolution
 
     public int? SolvePart2()
     {
-        return 0;
+        var codes = ParseInput();
+
+        return codes.Select(code =>
+        {
+            Console.WriteLine($"{code}");
+
+            var buttonSequence = GetButtonSequence(code, RobotInstructionsToPressKeypad);
+
+            // i < 25; Memoisation required.
+            for (int i = 0; i < 2; i++)
+            {
+                Console.WriteLine($"{buttonSequence[0]}");
+
+                buttonSequence = buttonSequence
+                    .SelectMany(bs => GetButtonSequence(bs, RobotInstructionsToPressArrows))
+                    .ToList();
+
+                buttonSequence = buttonSequence
+                    .Where(bs => !buttonSequence.Any(bs2 => bs2.Length < bs.Length))
+                    .ToList();
+            }
+
+            var minBs = buttonSequence.MinBy(bs => bs.Length)!;
+
+            return GetCodeNum(code) * minBs.Length;
+        }).Sum();
     }
 
     private static int GetCodeNum(string code)
@@ -34,15 +66,15 @@ public class Day21 : IDaySolution
         return int.Parse(match.ToString());
     }
 
-    private static List<string> GetButtonSequence(string code, GetRobotInstruction GetRobotInstructionFunc)
+    private static List<string> GetButtonSequence(string code, Dictionary<KeyPair, IEnumerable<string>> RobotInstructions)
     {
         var currentKey = 'A';
 
-        var possibleSequences = new List<string>{""};
+        var possibleSequences = new List<string> { "" };
 
         foreach (var nextKey in code)
         {
-            var movements = GetRobotInstructionFunc(currentKey, nextKey);
+            var movements = RobotInstructions[new (currentKey, nextKey)];
             possibleSequences = possibleSequences
                 .SelectMany(s => movements.Select(m =>
                     s + m + 'A'
@@ -54,182 +86,173 @@ public class Day21 : IDaySolution
         return possibleSequences;
     }
 
-    private static IEnumerable<string> GetRobotInstructionsToPressKeypad(char currentKey, char nextKey)
+    private static readonly Dictionary<KeyPair, IEnumerable<string>> RobotInstructionsToPressKeypad = new()
     {
-        return (currentKey, nextKey) switch
-        {
-            ('0', '1') => ["^<"],
-            ('0', '2') => ["^"],
-            ('0', '3') => ["^>", ">^"],
-            ('0', '4') => ["^^<"],
-            ('0', '5') => ["^^"],
-            ('0', '6') => ["^^>", ">^^"],
-            ('0', '7') => ["^^^<"],
-            ('0', '8') => ["^^^"],
-            ('0', '9') => ["^^^>", ">^^^"],
-            ('0', 'A') => [">"],
-            ('0', '0') => [""],
+        { new('0', '1'), ["^<"] },
+        { new('0', '2'), ["^"] },
+        { new('0', '3'), ["^>", ">^"] },
+        { new('0', '4'), ["^^<"] },
+        { new('0', '5'), ["^^"] },
+        { new('0', '6'), ["^^>", ">^^"] },
+        { new('0', '7'), ["^^^<"] },
+        { new('0', '8'), ["^^^"] },
+        { new('0', '9'), ["^^^>", ">^^^"] },
+        { new('0', 'A'), [">"] },
+        { new('0', '0'), [""] },
 
-            ('1', '1') => [""],
-            ('1', '2') => [">"],
-            ('1', '3') => [">>"],
-            ('1', '4') => ["^"],
-            ('1', '5') => ["^>", ">^"],
-            ('1', '6') => ["^>>", ">>^"],
-            ('1', '7') => ["^^"],
-            ('1', '8') => ["^^>", ">^^"],
-            ('1', '9') => ["^^>>", ">>^^"],
-            ('1', 'A') => [">>v"],
-            ('1', '0') => [">v"],
+        { new('1', '1'), [""] },
+        { new('1', '2'), [">"] },
+        { new('1', '3'), [">>"] },
+        { new('1', '4'), ["^"] },
+        { new('1', '5'), ["^>", ">^"] },
+        { new('1', '6'), ["^>>", ">>^"] },
+        { new('1', '7'), ["^^"] },
+        { new('1', '8'), ["^^>", ">^^"] },
+        { new('1', '9'), ["^^>>", ">>^^"] },
+        { new('1', 'A'), [">>v"] },
+        { new('1', '0'), [">v"] },
 
-            ('2', '1') => ["<"],
-            ('2', '2') => [""],
-            ('2', '3') => [">"],
-            ('2', '4') => ["^<", "<^"],
-            ('2', '5') => ["^"],
-            ('2', '6') => ["^>", ">^"],
-            ('2', '7') => ["^^<", "<^^"],
-            ('2', '8') => ["^^"],
-            ('2', '9') => ["^^>", ">^^"],
-            ('2', 'A') => ["v>", ">v"],
-            ('2', '0') => ["v"],
+        { new('2', '1'), ["<"] },
+        { new('2', '2'), [""] },
+        { new('2', '3'), [">"] },
+        { new('2', '4'), ["^<", "<^"] },
+        { new('2', '5'), ["^"] },
+        { new('2', '6'), ["^>", ">^"] },
+        { new('2', '7'), ["^^<", "<^^"] },
+        { new('2', '8'), ["^^"] },
+        { new('2', '9'), ["^^>", ">^^"] },
+        { new('2', 'A'), ["v>", ">v"] },
+        { new('2', '0'), ["v"] },
 
-            ('3', '1') => ["<<"],
-            ('3', '2') => ["<"],
-            ('3', '3') => [""],
-            ('3', '4') => ["^<<", "<<^"],
-            ('3', '5') => ["^<", "<^"],
-            ('3', '6') => ["^"],
-            ('3', '7') => ["<<^^", "^^<<"],
-            ('3', '8') => ["^^<", "<^^"],
-            ('3', '9') => ["^^"],
-            ('3', 'A') => ["v"],
-            ('3', '0') => ["<v", "v<"],
+        { new('3', '1'), ["<<"] },
+        { new('3', '2'), ["<"] },
+        { new('3', '3'), [""] },
+        { new('3', '4'), ["^<<", "<<^"] },
+        { new('3', '5'), ["^<", "<^"] },
+        { new('3', '6'), ["^"] },
+        { new('3', '7'), ["<<^^", "^^<<"] },
+        { new('3', '8'), ["^^<", "<^^"] },
+        { new('3', '9'), ["^^"] },
+        { new('3', 'A'), ["v"] },
+        { new('3', '0'), ["<v", "v<"] },
 
-            ('4', '1') => ["v"],
-            ('4', '2') => ["v>", ">v"],
-            ('4', '3') => ["v>>", ">>v"],
-            ('4', '4') => [""],
-            ('4', '5') => [">"],
-            ('4', '6') => [">>"],
-            ('4', '7') => ["^"],
-            ('4', '8') => ["^>", ">^"],
-            ('4', '9') => ["^>>", ">>^"],
-            ('4', 'A') => [">>vv"],
-            ('4', '0') => [">vv"],
+        { new('4', '1'), ["v"] },
+        { new('4', '2'), ["v>", ">v"] },
+        { new('4', '3'), ["v>>", ">>v"] },
+        { new('4', '4'), [""] },
+        { new('4', '5'), [">"] },
+        { new('4', '6'), [">>"] },
+        { new('4', '7'), ["^"] },
+        { new('4', '8'), ["^>", ">^"] },
+        { new('4', '9'), ["^>>", ">>^"] },
+        { new('4', 'A'), [">>vv"] },
+        { new('4', '0'), [">vv"] },
 
-            ('5', '1') => ["<v", "v<"],
-            ('5', '2') => ["v"],
-            ('5', '3') => ["v>", ">v"],
-            ('5', '4') => ["<"],
-            ('5', '5') => [""],
-            ('5', '6') => [">"],
-            ('5', '7') => ["^<", "<^"],
-            ('5', '8') => ["^"],
-            ('5', '9') => ["^>", ">^"],
-            ('5', 'A') => ["vv>", ">vv"],
-            ('5', '0') => ["vv"],
+        { new('5', '1'), ["<v", "v<"] },
+        { new('5', '2'), ["v"] },
+        { new('5', '3'), ["v>", ">v"] },
+        { new('5', '4'), ["<"] },
+        { new('5', '5'), [""] },
+        { new('5', '6'), [">"] },
+        { new('5', '7'), ["^<", "<^"] },
+        { new('5', '8'), ["^"] },
+        { new('5', '9'), ["^>", ">^"] },
+        { new('5', 'A'), ["vv>", ">vv"] },
+        { new('5', '0'), ["vv"] },
 
-            ('6', '1') => ["<<v", "v<<"],
-            ('6', '2') => ["<v", "v<"],
-            ('6', '3') => ["v"],
-            ('6', '4') => ["<<"],
-            ('6', '5') => ["<"],
-            ('6', '6') => [""],
-            ('6', '7') => ["^<<", "<<^"],
-            ('6', '8') => ["^<", "<^"],
-            ('6', '9') => ["^"],
-            ('6', 'A') => ["vv"],
-            ('6', '0') => ["<vv", "vv<"],
+        { new('6', '1'), ["<<v", "v<<"] },
+        { new('6', '2'), ["<v", "v<"] },
+        { new('6', '3'), ["v"] },
+        { new('6', '4'), ["<<"] },
+        { new('6', '5'), ["<"] },
+        { new('6', '6'), [""] },
+        { new('6', '7'), ["^<<", "<<^"] },
+        { new('6', '8'), ["^<", "<^"] },
+        { new('6', '9'), ["^"] },
+        { new('6', 'A'), ["vv"] },
+        { new('6', '0'), ["<vv", "vv<"] },
 
-            ('7', '1') => ["vv"],
-            ('7', '2') => ["vv>", ">vv"],
-            ('7', '3') => ["vv>>", ">>vv"],
-            ('7', '4') => ["v"],
-            ('7', '5') => ["v>", ">v"],
-            ('7', '6') => ["v>>", ">>v"],
-            ('7', '7') => [""],
-            ('7', '8') => [">"],
-            ('7', '9') => [">>"],
-            ('7', 'A') => [">>vvv"],
-            ('7', '0') => [">vvv"],
+        { new('7', '1'), ["vv"] },
+        { new('7', '2'), ["vv>", ">vv"] },
+        { new('7', '3'), ["vv>>", ">>vv"] },
+        { new('7', '4'), ["v"] },
+        { new('7', '5'), ["v>", ">v"] },
+        { new('7', '6'), ["v>>", ">>v"] },
+        { new('7', '7'), [""] },
+        { new('7', '8'), [">"] },
+        { new('7', '9'), [">>"] },
+        { new('7', 'A'), [">>vvv"] },
+        { new('7', '0'), [">vvv"] },
 
-            ('8', '1') => ["<vv", "vv<"],
-            ('8', '2') => ["vv"],
-            ('8', '3') => ["vv>", ">vv"],
-            ('8', '4') => ["<v", "v<"],
-            ('8', '5') => ["v"],
-            ('8', '6') => ["v>", ">v"],
-            ('8', '7') => ["<"],
-            ('8', '8') => [""],
-            ('8', '9') => [">"],
-            ('8', 'A') => ["vvv>", ">vvv"],
-            ('8', '0') => ["vvv"],
+        { new('8', '1'), ["<vv", "vv<"] },
+        { new('8', '2'), ["vv"] },
+        { new('8', '3'), ["vv>", ">vv"] },
+        { new('8', '4'), ["<v", "v<"] },
+        { new('8', '5'), ["v"] },
+        { new('8', '6'), ["v>", ">v"] },
+        { new('8', '7'), ["<"] },
+        { new('8', '8'), [""] },
+        { new('8', '9'), [">"] },
+        { new('8', 'A'), ["vvv>", ">vvv"] },
+        { new('8', '0'), ["vvv"] },
 
-            ('9', '1') => ["<<vv", "vv<<"],
-            ('9', '2') => ["<vv", "vv<"],
-            ('9', '3') => ["vv"],
-            ('9', '4') => ["<<v", "v<<"],
-            ('9', '5') => ["<v", "v<"],
-            ('9', '6') => ["v"],
-            ('9', '7') => ["<<"],
-            ('9', '8') => ["<"],
-            ('9', '9') => [""],
-            ('9', 'A') => ["vvv"],
-            ('9', '0') => ["<vvv", "vvv<"],
+        { new('9', '1'), ["<<vv", "vv<<"] },
+        { new('9', '2'), ["<vv", "vv<"] },
+        { new('9', '3'), ["vv"] },
+        { new('9', '4'), ["<<v", "v<<"] },
+        { new('9', '5'), ["<v", "v<"] },
+        { new('9', '6'), ["v"] },
+        { new('9', '7'), ["<<"] },
+        { new('9', '8'), ["<"] },
+        { new('9', '9'), [""] },
+        { new('9', 'A'), ["vvv"] },
+        { new('9', '0'), ["<vvv", "vvv<"] },
 
-            ('A', '1') => ["^<<"],
-            ('A', '2') => ["^<", "<^"],
-            ('A', '3') => ["^"],
-            ('A', '4') => ["^^<<"],
-            ('A', '5') => ["^^<", "<^^"],
-            ('A', '6') => ["^^"],
-            ('A', '7') => ["^^^<<"],
-            ('A', '8') => ["^^^<", "<^^^"],
-            ('A', '9') => ["^^^"],
-            ('A', 'A') => [""],
-            ('A', '0') => ["<"],
-            _ => ["?"],
-        };
-    }
+        { new('A', '1'), ["^<<"] },
+        { new('A', '2'), ["^<", "<^"] },
+        { new('A', '3'), ["^"] },
+        { new('A', '4'), ["^^<<"] },
+        { new('A', '5'), ["^^<", "<^^"] },
+        { new('A', '6'), ["^^"] },
+        { new('A', '7'), ["^^^<<"] },
+        { new('A', '8'), ["^^^<", "<^^^"] },
+        { new('A', '9'), ["^^^"] },
+        { new('A', 'A'), [""] },
+        { new('A', '0'), ["<"] },
+    };
 
-    private static IEnumerable<string> GetRobotInstructionsToPressArrows(char currentKey, char nextKey)
+    private static readonly Dictionary<KeyPair, IEnumerable<string>> RobotInstructionsToPressArrows = new()
     {
-        return (currentKey, nextKey) switch
-        {
-            ('A', '^') => ["<"],
-            ('A', '<') => ["v<<"],
-            ('A', 'v') => ["<v", "v<"],
-            ('A', '>') => ["v"],
-            ('A', 'A') => [""],
+        {new ('A', '^'), ["<"]},
+        {new ('A', '<'), ["v<<"]},
+        {new ('A', 'v'), ["<v", "v<"]},
+        {new ('A', '>'), ["v"]},
+        {new ('A', 'A'), [""]},
 
-            ('^', '^') => [""],
-            ('^', '<') => ["v<"],
-            ('^', 'v') => ["v"],
-            ('^', '>') => ["v>", ">v"],
-            ('^', 'A') => [">"],
+        {new ('^', '^'), [""]},
+        {new ('^', '<'), ["v<"]},
+        {new ('^', 'v'), ["v"]},
+        {new ('^', '>'), ["v>", ">v"]},
+        {new ('^', 'A'), [">"]},
 
-            ('<', '^') => [">^"],
-            ('<', '<') => [""],
-            ('<', 'v') => [">"],
-            ('<', '>') => [">>"],
-            ('<', 'A') => [">>^"],
+        {new ('<', '^'), [">^"]},
+        {new ('<', '<'), [""]},
+        {new ('<', 'v'), [">"]},
+        {new ('<', '>'), [">>"]},
+        {new ('<', 'A'), [">>^"]},
 
-            ('v', '^') => ["^"],
-            ('v', '<') => ["<"],
-            ('v', 'v') => [""],
-            ('v', '>') => [">"],
-            ('v', 'A') => ["^>", ">^"],
+        {new ('v', '^'), ["^"]},
+        {new ('v', '<'), ["<"]},
+        {new ('v', 'v'), [""]},
+        {new ('v', '>'), [">"]},
+        {new ('v', 'A'), ["^>", ">^"]},
 
-            ('>', '^') => ["^<", "<^"],
-            ('>', '<') => ["<<"],
-            ('>', 'v') => ["<"],
-            ('>', '>') => [""],
-            ('>', 'A') => ["^"],
-
-            _ => ["?"]
-        };
-    }
+        {new ('>', '^'), ["^<", "<^"]},
+        {new ('>', '<'), ["<<"]},
+        {new ('>', 'v'), ["<"]},
+        {new ('>', '>'), [""]},
+        {new ('>', 'A'), ["^"]}
+    };
 
     private static char GetArrowFromInstructions(string instructions, char startArrow = 'A')
     {
@@ -273,3 +296,5 @@ public class Day21 : IDaySolution
 }
 
 internal delegate IEnumerable<string> GetRobotInstruction(char currentKey, char nextKey);
+
+internal record KeyPair(char CurrentKey, char NextKey);
